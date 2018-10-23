@@ -110,7 +110,7 @@ defmodule EthWatcher.WatcherTest do
         assert processed_tx.hash == "0x2ca89c40b72bf8350a5cdec95fe1a41884250614a31bc996c99229a5ab76e8f0"
     end
 
-    test "process_transactions/3 for token transaction", %{ token_block: token_block } do
+    test "process_transactions/1 for token transaction", %{ token_block: token_block } do
       txs           = token_block["transactions"]
       processed_tx  = Watcher.process_transactions(txs) |> List.first
 
@@ -123,7 +123,7 @@ defmodule EthWatcher.WatcherTest do
     end
 
 
-    test "process_transactions/3 for dai token transaction", %{ dai_block: dai_block } do
+    test "process_transactions/1 for dai token transaction", %{ dai_block: dai_block } do
       txs           = dai_block["transactions"]
       processed_tx  = Watcher.process_transactions(txs) |> List.first
 
@@ -134,7 +134,7 @@ defmodule EthWatcher.WatcherTest do
       assert processed_tx.hash              == "0x2fd2befb20960b4a7b50c3e2df1caf69855cdac469ccdce1791269adcac15bc9"
     end
 
-    test "process_transactions/3 for eth transaction", %{ eth_block: eth_block } do
+    test "process_transactions/1 for eth transaction", %{ eth_block: eth_block } do
       txs           = eth_block["transactions"]
       processed_tx  = Watcher.process_transactions(txs) |> List.first
 
@@ -143,7 +143,7 @@ defmodule EthWatcher.WatcherTest do
       assert processed_tx[:to]            ==  "0x0681d8db095565fe8a346fa0277bffde9c0edbbf"
       assert processed_tx[:is_token_tx]   ==  false
       assert processed_tx[:value]         ==  "0x51bdf8236f942380000"
-      assert processed_tx[:token_amount]  ==  "24126"
+      assert processed_tx[:token_amount]  ==  24126
       assert processed_tx[:hash]          ==  "0x846c342793f8c7ddb2c2cb13f465cb1d11de12d41735971845b5ab6fc8a91c02"
     end
   end

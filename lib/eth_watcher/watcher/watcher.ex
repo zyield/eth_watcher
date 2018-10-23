@@ -7,7 +7,7 @@ defmodule EthWatcher.Watcher do
 
 
   @infura "https://mainnet.infura.io/v3/ac1b630668ed483cbe7aef78280f38b3"
-  @eth_threshold 200_000
+  @eth_threshold 1_000
   @transfer_signature "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef"
 
   def start_link do
@@ -59,11 +59,12 @@ defmodule EthWatcher.Watcher do
                 |> Util.to_token(18)
                 |> Util.to_rounded(0)
 
-    { token_amount, _} = "#{token_amount}" |> Integer.parse
+    {parsed_amount, _} = "#{token_amount}" |> Integer.parse
 
+    IO.puts parsed_amount
     tx |> Map.merge(%{
       "symbol" => "ETH",
-      "token_amount" => token_amount,
+      "token_amount" => parsed_amount,
       "decimals" => 18,
       "is_token_tx" => false
     })
@@ -101,13 +102,13 @@ defmodule EthWatcher.Watcher do
   end
 
   def process_eth_tx(tx = %{"token_amount" => token_amount}) do
+    IO.inspect token_amount
     unless is_below_threshold?(token_amount) do
       %{
         from: tx["from"],
         to: tx["to"],
         symbol: "ETH",
         decimals: tx["decimals"],
-        block_id: tx["block_id"],
         hash: tx["hash"],
         value: tx["value"],
         token_amount: tx["token_amount"],
@@ -119,7 +120,6 @@ defmodule EthWatcher.Watcher do
 
   def send(transaction) do
     # Dispatcher.dispatch(transaction)
-    IO.inspect transaction
     transaction
   end
 
