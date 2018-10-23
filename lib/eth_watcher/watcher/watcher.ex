@@ -1,5 +1,6 @@
 defmodule EthWatcher.Watcher do
   use GenServer
+  require Logger
 
   alias EthWatcher.Dispatcher
   alias EthWatcher.Util
@@ -14,19 +15,28 @@ defmodule EthWatcher.Watcher do
   end
 
   def init(state) do
-    work(nil)
+    schedule_work()
     {:ok, state}
   end
 
-  def work(prev_hash) do
-    Process.sleep(1000)
+  def handle_info(:work, state) do
+    Process.get(:hash)
+    |> work
 
+    schedule_work()
+    {:noreply, state}
+  end
+
+  def schedule_work do
+    Process.send_after(self(), :work, 1000)
+  end
+
+  def work(prev_hash) do
     case get_latest_block() do
       {:ok, block = %{"hash" => hash}} ->
         unless prev_hash == hash, do: process_block(block)
-        work(hash)
-      {:error, _} ->
-        work(prev_hash)
+        Process.put(:hash, hash)
+      {:error, _} -> Logger.info "Error getting block"
     end
   end
 
@@ -43,23 +53,22 @@ defmodule EthWatcher.Watcher do
     |> Enum.map(&process_tx/1)
   end
 
-  # Add decimals and price for what is most likely a pure ETH transaction
-  # (based on input field)
   def add_token_details(tx = %{"input" => input, "value" => value}) when input == "0x" do
     token_amount = value
                 |> Util.parse_value
                 |> Util.to_token(18)
                 |> Util.to_rounded(0)
 
+    { token_amount, _} = "#{token_amount}" |> Integer.parse
+
     tx |> Map.merge(%{
       "symbol" => "ETH",
-      "token_amount" => "#{token_amount}",
+      "token_amount" => token_amount,
       "decimals" => 18,
       "is_token_tx" => false
     })
   end
 
-  # Add decimals and price for other txs
   def add_token_details(tx = %{"to" => to_address}) do
     tx |> Map.put("is_token_tx", true)
   end
