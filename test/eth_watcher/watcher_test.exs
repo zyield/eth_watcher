@@ -41,7 +41,6 @@ defmodule EthWatcher.WatcherTest do
       updated_tx = Watcher.add_token_details(tx)
 
       assert updated_tx["is_token_tx"] == false
-      assert updated_tx["decimals"] == 18
     end
 
     test "process_tx/1 processes eth tx", %{eth_tx: tx} do
@@ -138,12 +137,11 @@ defmodule EthWatcher.WatcherTest do
       txs           = eth_block["transactions"]
       processed_tx  = Watcher.process_transactions(txs) |> List.first
 
-      assert processed_tx[:decimals]      ==  18
       assert processed_tx[:from]          ==  "0x3f5ce5fbfe3e9af3971dd833d26ba9b5c936f0be"
       assert processed_tx[:to]            ==  "0x0681d8db095565fe8a346fa0277bffde9c0edbbf"
       assert processed_tx[:is_token_tx]   ==  false
       assert processed_tx[:value]         ==  "0x51bdf8236f942380000"
-      assert processed_tx[:token_amount]  ==  24126
+      assert processed_tx[:token_amount]  ==  "24126000000000000000000"
       assert processed_tx[:hash]          ==  "0x846c342793f8c7ddb2c2cb13f465cb1d11de12d41735971845b5ab6fc8a91c02"
     end
   end

@@ -7,7 +7,7 @@ defmodule EthWatcher.Watcher do
 
 
   @infura "https://mainnet.infura.io/v3/ac1b630668ed483cbe7aef78280f38b3"
-  @eth_threshold 1_000
+  @wei_threshold 1_000 * :math.pow(10, 18)
   @transfer_signature "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef"
 
   def start_link do
@@ -56,28 +56,22 @@ defmodule EthWatcher.Watcher do
   def add_token_details(tx = %{"input" => input, "value" => value}) when input == "0x" do
     token_amount = value
                 |> Util.parse_value
-                |> Util.to_token(18)
-                |> Util.to_rounded(0)
 
-    {parsed_amount, _} = "#{token_amount}" |> Integer.parse
-
-    IO.puts parsed_amount
     tx |> Map.merge(%{
       "symbol" => "ETH",
-      "token_amount" => parsed_amount,
-      "decimals" => 18,
+      "token_amount" => "#{token_amount}",
       "is_token_tx" => false
     })
   end
 
-  def add_token_details(tx = %{"to" => to_address}) do
+  def add_token_details(tx) do
     tx |> Map.put("is_token_tx", true)
   end
 
   def process_tx(tx = %{"is_token_tx" => true}), do: process_token_tx(tx)
   def process_tx(tx), do: process_eth_tx(tx)
 
-  def process_token_tx(%{"hash" => hash, "is_token_tx" => is_token_tx} = transaction) do
+  def process_token_tx(%{"hash" => hash, "is_token_tx" => is_token_tx}) do
     with {:ok, %{"logs" => logs}} <- get_transaction_receipt(hash) do
       transfer_log = logs |> get_transfer_log
 
@@ -102,8 +96,8 @@ defmodule EthWatcher.Watcher do
   end
 
   def process_eth_tx(tx = %{"token_amount" => token_amount}) do
-    IO.inspect token_amount
-    unless is_below_threshold?(token_amount) do
+    {wei, _} = token_amount |> Integer.parse
+    unless is_below_threshold?(wei) do
       %{
         from: tx["from"],
         to: tx["to"],
@@ -160,5 +154,5 @@ defmodule EthWatcher.Watcher do
   def is_transfer_log?(log), do: log["topics"] |> Enum.at(0) == @transfer_signature
 
   def is_below_threshold?("0"), do: true
-  def is_below_threshold?(value), do: value < @eth_threshold
+  def is_below_threshold?(value), do: value < @wei_threshold
 end
