@@ -8,7 +8,7 @@ defmodule EthWatcher.Application do
 
     # Define workers and child supervisors to be supervised
 
-    children = 
+    children =
       unless Mix.env() == :test do
         [
           supervisor(EthWatcherWeb.Endpoint, []),
@@ -19,6 +19,8 @@ defmodule EthWatcher.Application do
       end
     # See https://hexdocs.pm/elixir/Supervisor.html
     # for other strategies and supported options
+    {:ok, _} = Logger.add_backend(Sentry.LoggerBackend)
+
     opts = [strategy: :one_for_one, name: EthWatcher.Supervisor]
     Supervisor.start_link(children, opts)
   end

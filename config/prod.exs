@@ -59,6 +59,17 @@ config :logger, level: :info
 #     config :eth_watcher, EthWatcherWeb.Endpoint, server: true
 #
 
+config :sentry,
+  dsn: "",
+  environment_name: :prod,
+  enable_source_code_context: true,
+  root_source_code_path: File.cwd!,
+  tags: %{
+    env: "production"
+  },
+  included_environments: [:prod]
+
+
 # Finally import the config/prod.secret.exs
 # which should be versioned separately.
 import_config "prod.secret.exs"

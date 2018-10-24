@@ -114,6 +114,7 @@ defmodule EthWatcher.Watcher do
 
   def send(transaction) do
     # Dispatcher.dispatch(transaction)
+    IO.inspect transaction
     transaction
   end
 
