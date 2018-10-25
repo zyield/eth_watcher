@@ -106,15 +106,18 @@ defmodule EthWatcher.Watcher do
         hash: tx["hash"],
         value: tx["value"],
         token_amount: tx["token_amount"],
-        is_token_tx: tx["is_token_tx"]
+        is_token_tx: tx["is_token_tx"],
+        timestamp: :os.system_time(:seconds)
       }
       |> send
     end
   end
 
   def send(transaction) do
-    # Dispatcher.dispatch(transaction)
-    IO.inspect transaction
+    transaction
+    |> Map.put("timestamp", :os.system_time(:seconds))
+    |> Dispatcher.dispatch
+
     transaction
   end
 
