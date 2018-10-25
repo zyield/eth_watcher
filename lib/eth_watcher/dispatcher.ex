@@ -1,11 +1,11 @@
 defmodule EthWatcher.Dispatcher do
-  @base_url ""
+  @base_url "https://chainspark-api-staging.herokuapp.com/api/transactions"
 
   def dispatch(tx) when is_nil(tx), do: nil
   def dispatch(tx), do: post(tx)
 
   defp post(msg) do
-    headers = [{"Content-Type", "application/json"}]
+    headers = [{"Content-Type", "application/vnd.api+json"}, {"Chainspark-secret", "123"}]
 
     with {:ok, payload} <- Poison.encode(msg),
          {:ok, %HTTPoison.Response{status_code: 200, body: body}} <- HTTPoison.post(@base_url, payload, headers),
