@@ -7,7 +7,7 @@ defmodule EthWatcher.Watcher do
 
 
   @infura "https://mainnet.infura.io/v3/ac1b630668ed483cbe7aef78280f38b3"
-  @wei_threshold 1_000 * :math.pow(10, 18)
+  @wei_threshold 100 * :math.pow(10, 18)
   @transfer_signature "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef"
 
   def start_link do
