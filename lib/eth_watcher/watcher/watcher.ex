@@ -105,7 +105,7 @@ defmodule EthWatcher.Watcher do
         decimals: tx["decimals"],
         hash: tx["hash"],
         value: tx["value"],
-        token_amount: tx["token_amount"],
+        token_amount: wei,
         is_token_tx: tx["is_token_tx"],
         timestamp: :os.system_time(:seconds)
       }
