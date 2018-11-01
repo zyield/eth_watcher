@@ -136,7 +136,6 @@ defmodule EthWatcher.Watcher do
     |> Map.put("timestamp", :os.system_time(:seconds))
     |> Dispatcher.dispatch
 
-    Logger.info "transaction sent"
     transaction
   end
 
