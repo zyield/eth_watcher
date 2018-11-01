@@ -9,7 +9,7 @@ defmodule EthWatcher.Application do
     # Define workers and child supervisors to be supervised
 
     children =
-      unless Mix.env() == :test do
+      unless Mix.env() == :test or Mix.env() == :dev  do
         [
           supervisor(EthWatcherWeb.Endpoint, []),
           supervisor(EthWatcher.Watcher, [])
