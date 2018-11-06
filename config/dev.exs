@@ -1,5 +1,8 @@
 use Mix.Config
 
+config :eth_watcher, :enable_watcher, true
+config :eth_watcher, :api_url, "http://localhost:4000/api/transactions"
+
 # For development, we disable any cache and enable
 # debugging and code reloading.
 #
@@ -35,3 +38,4 @@ config :logger, :console, format: "[$level] $message\n"
 # Set a higher stacktrace during development. Avoid configuring such
 # in production as building large stacktraces may be expensive.
 config :phoenix, :stacktrace_depth, 20
+

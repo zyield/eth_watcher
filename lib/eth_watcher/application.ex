@@ -9,7 +9,7 @@ defmodule EthWatcher.Application do
     # Define workers and child supervisors to be supervised
 
     children =
-      unless Mix.env() == :test do
+      if watcher_enabled? do
         [
           supervisor(EthWatcherWeb.Endpoint, []),
           supervisor(EthWatcher.Watcher, [])
@@ -31,4 +31,12 @@ defmodule EthWatcher.Application do
     EthWatcherWeb.Endpoint.config_change(changed, removed)
     :ok
   end
+
+  defp watcher_enabled? do
+    Application.get_env(:eth_watcher, :enable_watcher) |> is_true?
+  end
+
+  defp is_true?("true"), do: true
+  defp is_true?(true), do: true
+  defp is_true?(_), do: false
 end

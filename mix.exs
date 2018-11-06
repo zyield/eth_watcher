@@ -40,7 +40,8 @@ defmodule EthWatcher.Mixfile do
       {:gettext, "~> 0.11"},
       {:cowboy, "~> 1.0"},
       {:sentry, "~> 7.0"},
-      {:jason, "~> 1.1"}
+      {:jason, "~> 1.1"},
+      {:distillery, "~> 2.0"}
     ]
   end
 end

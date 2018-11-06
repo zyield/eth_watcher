@@ -1,5 +1,8 @@
 use Mix.Config
 
+config :eth_watcher, :enable_watcher, true
+config :eth_watcher, :api_url, System.get_env("API_URL")
+
 # For production, we often load configuration from external
 # sources, such as your system environment. For this reason,
 # you won't find the :http configuration below, but set inside
@@ -15,8 +18,9 @@ use Mix.Config
 # which you typically run after static files are built.
 config :eth_watcher, EthWatcherWeb.Endpoint,
   load_from_system_env: true,
-  url: [host: "example.com", port: 80],
-  cache_static_manifest: "priv/static/cache_manifest.json"
+  url: [scheme: "http", host: {:system, "HOST"}, port: {:system, "PORT"}],
+  check_origin: false,
+  server: true
 
 # Do not print debug messages in production
 config :logger, level: :info
@@ -68,7 +72,6 @@ config :sentry,
     env: "production"
   },
   included_environments: [:prod]
-
 
 # Finally import the config/prod.secret.exs
 # which should be versioned separately.

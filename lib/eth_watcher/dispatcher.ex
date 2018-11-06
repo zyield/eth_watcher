@@ -1,5 +1,5 @@
 defmodule EthWatcher.Dispatcher do
-  @base_url "https://chainspark-api-staging.herokuapp.com/api/transactions"
+  @base_url Application.get_env(:eth_watcher, :api_url)
 
   def dispatch(tx) when is_nil(tx), do: nil
   def dispatch(tx), do: post(tx)
