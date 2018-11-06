@@ -141,7 +141,7 @@ defmodule EthWatcher.WatcherTest do
       assert processed_tx[:to]            ==  "0x0681d8db095565fe8a346fa0277bffde9c0edbbf"
       assert processed_tx[:is_token_tx]   ==  false
       assert processed_tx[:value]         ==  "0x51bdf8236f942380000"
-      assert processed_tx[:token_amount]  ==  "24126000000000000000000"
+      assert processed_tx[:token_amount]  ==  24126000000000000000000
       assert processed_tx[:hash]          ==  "0x846c342793f8c7ddb2c2cb13f465cb1d11de12d41735971845b5ab6fc8a91c02"
     end
   end

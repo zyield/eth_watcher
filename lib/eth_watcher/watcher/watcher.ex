@@ -5,30 +5,43 @@ defmodule EthWatcher.Watcher do
   alias EthWatcher.Dispatcher
   alias EthWatcher.Util
 
-
   @infura "https://mainnet.infura.io/v3/ac1b630668ed483cbe7aef78280f38b3"
-  @wei_threshold 1_000 * :math.pow(10, 18)
+  @wei_threshold 100 * :math.pow(10, 18)
   @transfer_signature "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef"
 
-  def start_link do
-    GenServer.start_link(__MODULE__, %{})
+  def start_link(state \\ %{}) do
+    GenServer.start_link(__MODULE__, state)
   end
 
   def init(state) do
-    schedule_work()
+    schedule_work(0)
+
     {:ok, state}
   end
 
+  def handle_info(:work, state = %{replay: true, range: first..last}) do
+    replay(first)
+    unless first >= last, do: schedule_work(50)
+
+    {:noreply, %{replay: true, range: (first + 1)..last}}
+  end
   def handle_info(:work, state) do
     Process.get(:hash)
     |> work
 
-    schedule_work()
+    schedule_work(1000)
     {:noreply, state}
   end
 
-  def schedule_work do
-    Process.send_after(self(), :work, 1000)
+  def schedule_work(timeout) do
+    Process.send_after(self(), :work, timeout)
+  end
+
+  def replay(block_number) do
+    case get_block(block_number) do
+      {:ok, block = %{"hash" => hash}} -> process_block(block)
+      {:error, _} -> Logger.info "Error getting block"
+    end
   end
 
   def work(prev_hash) do
@@ -41,6 +54,11 @@ defmodule EthWatcher.Watcher do
   end
 
   def get_latest_block, do: query_jsonrpc("eth_getBlockByNumber", ["latest", true])
+
+  def get_block(number) do
+    block = number |> Integer.to_string(16)
+    query_jsonrpc("eth_getBlockByNumber", ["0x" <> block, true])
+  end
 
   def process_block(%{"transactions" => transactions}) do
     Task.start(fn -> process_transactions(transactions) end)
@@ -105,7 +123,7 @@ defmodule EthWatcher.Watcher do
         decimals: tx["decimals"],
         hash: tx["hash"],
         value: tx["value"],
-        token_amount: tx["token_amount"],
+        token_amount: wei,
         is_token_tx: tx["is_token_tx"],
         timestamp: :os.system_time(:seconds)
       }

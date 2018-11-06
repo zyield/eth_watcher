@@ -7,5 +7,7 @@ defmodule EthWatcherWeb.Router do
 
   scope "/api", EthWatcherWeb do
     pipe_through :api
+
+    post "/replay", WatcherController, :replay
   end
 end
