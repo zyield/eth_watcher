@@ -60,36 +60,39 @@ defmodule EthWatcher.Watcher do
     query_jsonrpc("eth_getBlockByNumber", ["0x" <> block, true])
   end
 
-  def process_block(%{"transactions" => transactions}) do
-    Task.start(fn -> process_transactions(transactions) end)
+  def process_block(%{"timestamp" => timestamp, "transactions" => transactions}) do
+    Task.start(fn -> process_transactions(transactions, timestamp) end)
   end
 
-  def process_transactions(nil), do: nil
-  def process_transactions(transactions) do
+  def process_transactions(nil, _), do: nil
+  def process_transactions(transactions, timestamp) do
     transactions
-    |> Enum.map(&add_token_details/1)
+    |> Enum.map(fn tx -> add_token_details(tx, timestamp) end)
     |> Enum.map(&process_tx/1)
   end
 
-  def add_token_details(tx = %{"input" => input, "value" => value}) when input == "0x" do
+  def add_token_details(tx = %{"input" => input, "value" => value}, timestamp) when input == "0x" do
     token_amount = value
                 |> Util.parse_value
 
     tx |> Map.merge(%{
       "symbol" => "ETH",
       "token_amount" => "#{token_amount}",
-      "is_token_tx" => false
+      "is_token_tx" => false,
+      "timestamp" => Util.parse_value(timestamp)
     })
   end
 
-  def add_token_details(tx) do
-    tx |> Map.put("is_token_tx", true)
+  def add_token_details(tx, timestamp) do
+    tx
+    |> Map.put("is_token_tx", true)
+    |> Map.put("timestamp", Util.parse_value(timestamp))
   end
 
   def process_tx(tx = %{"is_token_tx" => true}), do: process_token_tx(tx)
   def process_tx(tx), do: process_eth_tx(tx)
 
-  def process_token_tx(%{"hash" => hash, "is_token_tx" => is_token_tx}) do
+  def process_token_tx(%{"hash" => hash, "is_token_tx" => is_token_tx, "timestamp" => timestamp}) do
     with {:ok, %{"logs" => logs}} <- get_transaction_receipt(hash) do
       transfer_log = logs |> get_transfer_log
 
@@ -106,7 +109,8 @@ defmodule EthWatcher.Watcher do
           token_amount: "#{token_amount}",
           is_token_tx: is_token_tx,
           hash: hash,
-          transfer_log: transfer_log
+          transfer_log: transfer_log,
+          timestamp: timestamp
         }
         |> send
       end
@@ -125,7 +129,7 @@ defmodule EthWatcher.Watcher do
         value: tx["value"],
         token_amount: wei,
         is_token_tx: tx["is_token_tx"],
-        timestamp: :os.system_time(:seconds)
+        timestamp: tx["timestamp"]
       }
       |> send
     end
