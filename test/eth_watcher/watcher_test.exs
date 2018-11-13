@@ -2,7 +2,7 @@ defmodule EthWatcher.WatcherTest do
   use ExUnit.Case
 
   alias EthWatcher.Watcher
-
+  
   describe "ETH watcher" do
     setup do
 
@@ -32,72 +32,73 @@ defmodule EthWatcher.WatcherTest do
       end
     end
 
-    test "add_token_details/2 correctly marks token tx", %{token_tx: tx} do
-      updated_tx = Watcher.add_token_details(tx)
+    test "add_token_details/2 correctly marks token tx", %{token_tx: tx, token_block: block} do
+      updated_tx = Watcher.add_token_details(tx, block["timestamp"])
       assert updated_tx["is_token_tx"] == true
     end
 
-    test "add_token_details/2 correctly marks eth tx", %{eth_tx: tx} do
-      updated_tx = Watcher.add_token_details(tx)
+    test "add_token_details/2 correctly marks eth tx", %{eth_tx: tx, eth_block: block} do
+      updated_tx = Watcher.add_token_details(tx, block["timestamp"])
 
       assert updated_tx["is_token_tx"] == false
     end
 
-    test "process_tx/1 processes eth tx", %{eth_tx: tx} do
+    test "process_tx/1 processes eth tx", %{eth_tx: tx, eth_block: block} do
       processed_tx =
         tx
           |> Map.put("value", "0xA967E1C9C85EB1060000")
-          |> Watcher.add_token_details
+          |> Watcher.add_token_details(block["timestamp"])
           |> Watcher.process_tx
 
       assert processed_tx.symbol == "ETH"
     end
 
-    test "process_tx/1 processes token tx", %{token_tx: tx} do
+    test "process_tx/1 processes token tx", %{token_tx: tx, token_block: block} do
       processed_tx =
         tx
           |> Map.put("hash", "0x00d22086d8b84764cd9d400bcd3237d92a192d0ea2ae8bb1d9de25628c3a28e6")
-          |> Watcher.add_token_details
+          |> Watcher.add_token_details(block["timestamp"])
           |> Watcher.process_tx
 
       assert processed_tx.hash == "0x00d22086d8b84764cd9d400bcd3237d92a192d0ea2ae8bb1d9de25628c3a28e6"
     end
 
-    test "process_tx/1 processes DAI tx", %{token_tx: tx} do
+    test "process_tx/1 processes DAI tx", %{token_tx: tx, token_block: block} do
       processed_tx =
         tx
           |> Map.put("hash", "0x2a02733412a074c1f05e6299755e4e395f7995b3ea45c9b8ab4be1750fae5ee1")
           |> Map.put("to", "0x14fbca95be7e99c15cc2996c6c9d841e54b79425")
-          |> Watcher.add_token_details
+          |> Watcher.add_token_details(block["timestamp"])
           |> Watcher.process_tx
 
       assert processed_tx |> Map.has_key?(:transfer_log) == true
       assert processed_tx.is_token_tx == true
     end
 
-    test "process_eth_tx/2 doesn't process tx if value below threshold", %{eth_tx_below: tx} do
+    test "process_eth_tx/2 doesn't process tx if value below threshold", %{eth_tx_below: tx, eth_block: block} do
       processed_tx = tx
-        |> Watcher.add_token_details
+        |> Watcher.add_token_details(block["timestamp"])
         |> Watcher.process_eth_tx
 
       assert is_nil(processed_tx) == true
     end
 
-    test "process_eth_tx/2 processes tx if value above threshold", %{eth_tx: tx} do
+    test "process_eth_tx/2 processes tx if value above threshold", %{eth_tx: tx, eth_block: block} do
       processed_tx = tx
         |> Map.put("value", "0xA967E1C9C85EB1060000")
-        |> Watcher.add_token_details
+        |> Watcher.add_token_details(block["timestamp"])
         |> Watcher.process_eth_tx
 
       assert processed_tx.value == "0xA967E1C9C85EB1060000"
+      assert processed_tx.timestamp == 1538680780
     end
 
-    test "process_token_tx/2 return correct values for txs", %{token_tx: tx} do
+    test "process_token_tx/2 return correct values for txs", %{token_tx: tx, token_block: block} do
       processed_tx =
         tx
         |> Map.put("hash", "0x2ca89c40b72bf8350a5cdec95fe1a41884250614a31bc996c99229a5ab76e8f0")
         |> Map.put("to", "0xb8c77482e45f1f44de1745f52c74426c631bdd52")
-        |> Watcher.add_token_details
+        |> Watcher.add_token_details(block["timestamp"])
         |> Watcher.process_token_tx
 
 
@@ -111,7 +112,7 @@ defmodule EthWatcher.WatcherTest do
 
     test "process_transactions/1 for token transaction", %{ token_block: token_block } do
       txs           = token_block["transactions"]
-      processed_tx  = Watcher.process_transactions(txs) |> List.first
+      processed_tx  = Watcher.process_transactions(txs, token_block["timestamp"]) |> List.first
 
       assert is_map(processed_tx.transfer_log) == true
       assert processed_tx.from                 == "0xd007058e9b58e74c33c6bf6fbcd38baab813cbb6"
@@ -124,7 +125,7 @@ defmodule EthWatcher.WatcherTest do
 
     test "process_transactions/1 for dai token transaction", %{ dai_block: dai_block } do
       txs           = dai_block["transactions"]
-      processed_tx  = Watcher.process_transactions(txs) |> List.first
+      processed_tx  = Watcher.process_transactions(txs, dai_block["timestamp"]) |> List.first
 
       assert processed_tx.from              == "0xf3ae3bbdeb2fb7f9c32fbb1f4fbdaf1150a1c5ce"
       assert processed_tx.to                == "0xab8d8b74f202f4cd4a918b65da4bac612e086ee7"
@@ -135,7 +136,7 @@ defmodule EthWatcher.WatcherTest do
 
     test "process_transactions/1 for eth transaction", %{ eth_block: eth_block } do
       txs           = eth_block["transactions"]
-      processed_tx  = Watcher.process_transactions(txs) |> List.first
+      processed_tx  = Watcher.process_transactions(txs, eth_block["timestamp"]) |> List.first
 
       assert processed_tx[:from]          ==  "0x3f5ce5fbfe3e9af3971dd833d26ba9b5c936f0be"
       assert processed_tx[:to]            ==  "0x0681d8db095565fe8a346fa0277bffde9c0edbbf"
