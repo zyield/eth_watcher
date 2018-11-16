@@ -1,4 +1,6 @@
 defmodule EthWatcher.Dispatcher do
+  require Logger
+
   @base_url Application.get_env(:eth_watcher, :api_url)
 
   def dispatch(tx) when is_nil(tx), do: nil
