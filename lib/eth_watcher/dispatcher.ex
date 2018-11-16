@@ -4,7 +4,9 @@ defmodule EthWatcher.Dispatcher do
   @base_url Application.get_env(:eth_watcher, :api_url)
 
   def dispatch(tx) when is_nil(tx), do: nil
-  def dispatch(tx), do: post(tx)
+  def dispatch(tx) do
+    unless Mix.env() == :test, do: post(tx)
+  end
 
   defp post(msg) do
     headers = [{"Content-Type", "application/vnd.api+json"}, {"Chainspark-secret", "123"}]
