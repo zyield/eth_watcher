@@ -19,7 +19,7 @@ defmodule EthWatcher.Watcher do
     {:ok, state}
   end
 
-  def handle_info(:work, state = %{replay: true, range: first..last}) do
+  def handle_info(:work, %{replay: true, range: first..last}) do
     replay(first)
     unless first >= last, do: schedule_work(50)
 
@@ -39,7 +39,7 @@ defmodule EthWatcher.Watcher do
 
   def replay(block_number) do
     case get_block(block_number) do
-      {:ok, block = %{"hash" => hash}} -> process_block(block)
+      {:ok, block} -> process_block(block)
       {:error, _} -> Logger.info "Error getting block"
     end
   end

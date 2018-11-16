@@ -1,5 +1,7 @@
 defmodule EthWatcherWeb.Endpoint do
   use Phoenix.Endpoint, otp_app: :eth_watcher
+  use Plug.ErrorHandler
+  use Sentry.Plug
 
   socket "/socket", EthWatcherWeb.UserSocket
 

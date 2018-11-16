@@ -19,7 +19,7 @@ defmodule EthWatcher.Mixfile do
   def application do
     [
       mod: {EthWatcher.Application, []},
-      extra_applications: [:logger, :runtime_tools]
+      extra_applications: [:sentry, :logger, :runtime_tools]
     ]
   end
 
