@@ -19,8 +19,8 @@ AWS_DEFAULT_REGION=us-west-2
 # These are the runtime environment variables.
 # Note that HOST needs to be set.
 API_URL=https://api.chainspark.io/api/transactions
-HOST=localhost
-PORT=4000
+HOST=ethwatcher.chainspark.io
+PORT=4001
 
 # Build container.
 # As we did before, but now we are going to build the Docker image that will
