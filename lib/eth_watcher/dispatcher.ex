@@ -8,9 +8,11 @@ defmodule EthWatcher.Dispatcher do
     headers = [{"Content-Type", "application/vnd.api+json"}, {"Chainspark-secret", "123"}]
 
     with {:ok, payload} <- Poison.encode(msg),
-         {:ok, %HTTPoison.Response{status_code: 200, body: body}} <- HTTPoison.post(@base_url, payload, headers),
-         {:ok, %{"result" => result}  } <- Poison.decode(body) do
-      {:ok, result}
+         {:ok, _} <- HTTPoison.post(@base_url, payload, headers)
+    do
+      Logger.info "Transaction posted"
+    else
+      error -> Logger.error error
     end
   end
 
