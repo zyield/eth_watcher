@@ -16,7 +16,13 @@ defmodule EthWatcher.Dispatcher do
     do
       Logger.info "Transaction posted"
     else
-      error -> Logger.error error
+      error ->
+        case error do
+          {:error, %HTTPoison.Error{id: nil, reason: :timeout}} ->
+            Logger.error "HTTPoison Timeout"
+          _ -> 
+            Logger.error error
+        end
     end
   end
 
