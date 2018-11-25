@@ -93,51 +93,58 @@ defmodule EthWatcher.Watcher do
   def process_tx(tx), do: process_eth_tx(tx)
 
   def process_token_tx(%{"hash" => hash, "is_token_tx" => is_token_tx, "timestamp" => timestamp}) do
-    with {:ok, %{"logs" => logs}} <- get_transaction_receipt(hash) do
-      transfer_log = logs |> get_transfer_log
-
-      unless is_nil transfer_log do
-        {from, to, value} = transfer_log
+    with {:ok, %{"logs" => logs} = receipt} <- get_transaction_receipt(hash) do
+      logs
+      |> Enum.reject(&is_transfer_log?/1)
+      |> Enum.reject(&is_nil/1)
+      |> Enum.each(fn log -> 
+        {from, to, value} = log
                             |> decode_topics
 
         token_amount = value
-                      |> Util.parse_value
+                       |> Util.parse_value
+
         %{
           from: from,
           to: to,
           value: value,
           token_amount: "#{token_amount}",
+          token_address: log["address"],
           is_token_tx: is_token_tx,
-          hash: hash,
-          transfer_log: transfer_log,
-          timestamp: timestamp
+          transaction_hash: log["transactionHash"],
+          transfer_log: log,
+          timestamp: timestamp,
+          log_index: log["logIndex"] |> Util.parse_value,
+          block_number: receipt["blockNumber"] |> Util.parse_value,
+          block_hash: receipt["blockHash"]
         }
         |> send
-      end
+      end)
     end
   end
 
   def process_eth_tx(tx = %{"token_amount" => token_amount}) do
     {wei, _} = token_amount |> Integer.parse
-    unless is_below_threshold?(wei) do
-      %{
-        from: tx["from"],
-        to: tx["to"],
-        symbol: "ETH",
-        decimals: tx["decimals"],
-        hash: tx["hash"],
-        value: tx["value"],
-        token_amount: wei,
-        is_token_tx: tx["is_token_tx"],
-        timestamp: tx["timestamp"]
-      }
-      |> send
-    end
+
+    %{
+      from: tx["from"],
+      to: tx["to"],
+      symbol: "ETH",
+      decimals: tx["decimals"],
+      transaction_hash: tx["hash"],
+      value: tx["value"],
+      token_amount: wei,
+      is_token_tx: tx["is_token_tx"],
+      timestamp: tx["timestamp"],
+      block_hash: tx["blockHash"],
+      block_number: tx["blockNumber"]
+    }
+    |> send
   end
 
   def send(transaction) do
     transaction
-    |> Map.put("timestamp", :os.system_time(:seconds))
+    |> Map.put("timestamp", :os.system_time(:seconds)) #TODO: Remove this
     |> Dispatcher.dispatch
 
     transaction
@@ -169,6 +176,17 @@ defmodule EthWatcher.Watcher do
     end
   end
 
+  defp decode_log_index([]), do: nil
+  defp decode_log_index(logs) do
+    logs = logs |> List.first
+
+    {log_index, _ } = logs
+                      |> String.slice(2..-1)
+                      |> Integer.parse(16)
+
+    log_index
+  end
+
   defp decode_topics(%{"topics" => topics}) when length(topics) < 3, do: {0, 0, 0}
   defp decode_topics(%{"topics" => topics, "data" => data}) do
     from = topics |> Enum.at(1) |> String.slice(26..-1)
@@ -177,7 +195,7 @@ defmodule EthWatcher.Watcher do
     {"0x" <> from, "0x" <> to, data}
   end
 
-  def is_transfer_log?(log), do: log["topics"] |> Enum.at(0) == @transfer_signature
+  def is_transfer_log?(log), do: log["topics"] |> Enum.at(0) != @transfer_signature
 
   def is_below_threshold?("0"), do: true
   def is_below_threshold?(value), do: value < @wei_threshold
