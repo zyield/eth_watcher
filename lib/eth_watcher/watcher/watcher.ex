@@ -6,7 +6,6 @@ defmodule EthWatcher.Watcher do
   alias EthWatcher.Util
 
   @infura "https://mainnet.infura.io/v3/ac1b630668ed483cbe7aef78280f38b3"
-  @wei_threshold 100 * :math.pow(10, 18)
   @transfer_signature "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef"
 
   def start_link(state \\ %{}) do
@@ -97,7 +96,7 @@ defmodule EthWatcher.Watcher do
       logs
       |> Enum.reject(&is_transfer_log?/1)
       |> Enum.reject(&is_nil/1)
-      |> Enum.each(fn log -> 
+      |> Enum.map(fn log -> 
         {from, to, value} = log
                             |> decode_topics
 
