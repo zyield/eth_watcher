@@ -1,4 +1,4 @@
-# EthWatcher
+# EthWatcher 
 
 To start your Phoenix server:
 
