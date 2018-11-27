@@ -20,8 +20,9 @@ defmodule EthWatcher.Dispatcher do
         case error do
           {:error, %HTTPoison.Error{id: nil, reason: :timeout}} ->
             Logger.error "HTTPoison Timeout"
-          _ -> 
-            Logger.error error
+          {:error, %HTTPoison.Error{id: nil, reason: reason}} ->
+            Logger.error "Error with #{reason}"
+          _ -> Logger.error "Uknown Error at dispatcher &post/1"
         end
     end
   end
