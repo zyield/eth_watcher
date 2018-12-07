@@ -94,7 +94,7 @@ defmodule EthWatcher.Watcher do
 
   def process_token_tx(%{"hash" => hash, "is_token_tx" => is_token_tx, "timestamp" => timestamp}) do
     with {:ok, %{"logs" => logs}} <- get_transaction_receipt(hash) do
-      transfer_log = logs |> get_transfer_log
+      transfer_log = get_transfer_log(logs)
 
       unless is_nil transfer_log do
         {from, to, value} = decode_topics(transfer_log)
@@ -117,7 +117,7 @@ defmodule EthWatcher.Watcher do
   end
 
   def process_eth_tx(tx = %{"token_amount" => token_amount}) do
-    {wei, _} = token_amount |> Integer.parse
+    {wei, _} = Integer.parse(token_amount)
     unless is_below_threshold?(wei) do
       %{
         from: tx["from"],
@@ -136,14 +136,14 @@ defmodule EthWatcher.Watcher do
 
   def send(transaction) do
     transaction
-    |> Map.put("timestamp", :os.system_time(:seconds))
     |> Dispatcher.dispatch
 
     transaction
   end
 
   def get_transfer_log(logs) when not is_nil(logs) and length(logs) > 0 do
-    logs |> Enum.find(fn log -> is_transfer_log?(log) or is_split_log?(log) end)
+    logs
+    |> Enum.find(fn log -> is_transfer_log?(log) or is_split_log?(log) end)
   end
   def get_transfer_log(_), do: nil
 
