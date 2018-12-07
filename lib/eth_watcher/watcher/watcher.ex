@@ -8,6 +8,7 @@ defmodule EthWatcher.Watcher do
   @infura "https://mainnet.infura.io/v3/ac1b630668ed483cbe7aef78280f38b3"
   @wei_threshold 100 * :math.pow(10, 18)
   @transfer_signature "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef"
+  @split_signature "0x56b138798bd325f6cc79f626c4644aa2fd6703ecb0ab0fb168f883caed75bf32"
 
   def start_link(state \\ %{}) do
     GenServer.start_link(__MODULE__, state)
@@ -72,8 +73,7 @@ defmodule EthWatcher.Watcher do
   end
 
   def add_token_details(tx = %{"input" => input, "value" => value}, timestamp) when input == "0x" do
-    token_amount = value
-                |> Util.parse_value
+    token_amount = Util.parse_value(value)
 
     tx |> Map.merge(%{
       "symbol" => "ETH",
@@ -97,11 +97,10 @@ defmodule EthWatcher.Watcher do
       transfer_log = logs |> get_transfer_log
 
       unless is_nil transfer_log do
-        {from, to, value} = transfer_log
-                            |> decode_topics
+        {from, to, value} = decode_topics(transfer_log)
 
-        token_amount = value
-                      |> Util.parse_value
+        token_amount = Util.parse_value(value)
+
         %{
           from: from,
           to: to,
@@ -144,7 +143,7 @@ defmodule EthWatcher.Watcher do
   end
 
   def get_transfer_log(logs) when not is_nil(logs) and length(logs) > 0 do
-    logs |> Enum.find(&is_transfer_log?/1)
+    logs |> Enum.find(fn log -> is_transfer_log?(log) or is_split_log?(log) end)
   end
   def get_transfer_log(_), do: nil
 
@@ -178,6 +177,8 @@ defmodule EthWatcher.Watcher do
   end
 
   def is_transfer_log?(log), do: log["topics"] |> Enum.at(0) == @transfer_signature
+
+  def is_split_log?(log), do: log["topics"] |> Enum.at(0) == @split_signature
 
   def is_below_threshold?("0"), do: true
   def is_below_threshold?(value), do: value < @wei_threshold

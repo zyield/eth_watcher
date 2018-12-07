@@ -2,7 +2,7 @@ defmodule EthWatcher.WatcherTest do
   use ExUnit.Case
 
   alias EthWatcher.Watcher
-  
+
   describe "ETH watcher" do
     setup do
 
@@ -18,6 +18,7 @@ defmodule EthWatcher.WatcherTest do
         token_tx      = token_block["transactions"] |> List.first
         token_dai_tx  = dai_block["transactions"] |> List.first
         eth_tx        = eth_block["transactions"] |> List.first
+        kraken_tx     = eth_block["transactions"] |> Enum.at(1)
         eth_tx_below  = eth_block_below["transactions"] |> List.first
         %{
           eth_block: eth_block,
@@ -26,6 +27,7 @@ defmodule EthWatcher.WatcherTest do
           token_block: token_block,
           token_tx: token_tx,
           eth_tx: eth_tx,
+          kraken_tx: kraken_tx,
           dai_block: dai_block,
           token_dai_tx: token_dai_tx
         }
@@ -110,7 +112,7 @@ defmodule EthWatcher.WatcherTest do
         assert processed_tx.hash == "0x2ca89c40b72bf8350a5cdec95fe1a41884250614a31bc996c99229a5ab76e8f0"
     end
 
-    test "process_transactions/1 for token transaction", %{ token_block: token_block } do
+    test "process_transactions/1 for token transaction", %{token_block: token_block} do
       txs           = token_block["transactions"]
       processed_tx  = Watcher.process_transactions(txs, token_block["timestamp"]) |> List.first
 
@@ -123,7 +125,7 @@ defmodule EthWatcher.WatcherTest do
     end
 
 
-    test "process_transactions/1 for dai token transaction", %{ dai_block: dai_block } do
+    test "process_transactions/1 for dai token transaction", %{dai_block: dai_block} do
       txs           = dai_block["transactions"]
       processed_tx  = Watcher.process_transactions(txs, dai_block["timestamp"]) |> List.first
 
@@ -134,7 +136,7 @@ defmodule EthWatcher.WatcherTest do
       assert processed_tx.hash              == "0x2fd2befb20960b4a7b50c3e2df1caf69855cdac469ccdce1791269adcac15bc9"
     end
 
-    test "process_transactions/1 for eth transaction", %{ eth_block: eth_block } do
+    test "process_transactions/1 for eth transaction", %{eth_block: eth_block} do
       txs           = eth_block["transactions"]
       processed_tx  = Watcher.process_transactions(txs, eth_block["timestamp"]) |> List.first
 
@@ -144,6 +146,18 @@ defmodule EthWatcher.WatcherTest do
       assert processed_tx[:value]         ==  "0x51bdf8236f942380000"
       assert processed_tx[:token_amount]  ==  24126000000000000000000
       assert processed_tx[:hash]          ==  "0x846c342793f8c7ddb2c2cb13f465cb1d11de12d41735971845b5ab6fc8a91c02"
+    end
+
+    test "process_transactions/1 for eth split transaction", %{eth_block: eth_block} do
+      txs           = eth_block["transactions"]
+      processed_tx  = Watcher.process_transactions(txs, eth_block["timestamp"]) |> Enum.at(1)
+
+      assert processed_tx[:from]          ==  "0xd67f76d78fa3597b019f138f9c6481711d63fd6b"
+      assert processed_tx[:to]            ==  "0x267be1c1d684f78cb4f6a176c4911b741e4ffdc0"
+      assert processed_tx[:is_token_tx]   ==  true
+      assert processed_tx[:value]         ==  "0x00000000000000000000000000000000000000000000054b40b0d8e4ec546500"
+      assert processed_tx[:token_amount]  ==  "24999999683968500000000"
+      assert processed_tx[:hash]          ==  "0x6b39e7d979f74e16718f5cba3d488720f27c34047c55b6a9ebb4dffa3e6aa714"
     end
   end
 end
