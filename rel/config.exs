@@ -34,11 +34,34 @@ environment :dev do
   set cookie: :"]]ZqS`DL2z;.(a}ERI`x.fY|.&=D<WOCZb3ecn3RNP{IUTA3&trThUmD$}izSu;8"
 end
 
+environment :staging do
+  set include_erts: true
+  set include_src: false
+  set cookie: :"vww<;/C7oexg@yB4bHHX{`_&xbBC;g&uikQ:Ys=5;rx,J?|9B/h}&%St4gU}3(h["
+  set vm_args: "rel/vm.args"
+
+  set config_providers: [
+    {Mix.Releases.Config.Providers.Elixir, ["${RELEASE_ROOT_DIR}/etc/config.exs"]}
+  ]
+
+  set overlays: [
+    {:copy, "rel/config/config.exs", "etc/config.exs"}
+  ]
+end
+
 environment :prod do
   set include_erts: true
   set include_src: false
   set cookie: :"vww<;/C7oexg@yB4bHHX{`_&xbBC;g&uikQ:Ys=5;rx,J?|9B/h}&%St4gU}3(h["
   set vm_args: "rel/vm.args"
+
+  set config_providers: [
+    {Mix.Releases.Config.Providers.Elixir, ["${RELEASE_ROOT_DIR}/etc/config.exs"]}
+  ]
+
+  set overlays: [
+    {:copy, "rel/config/config.exs", "etc/config.exs"}
+  ]
 end
 
 # You may define one or more releases in this file.
