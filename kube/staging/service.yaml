@@ -2,7 +2,7 @@ kind: Service
 apiVersion: v1
 metadata:
   name: eth-watcher-service
-  namespace: staging
+  namespace: chainspark-staging
 spec:
   selector:
     app: eth-watcher

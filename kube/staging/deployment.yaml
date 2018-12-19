@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: eth-watcher-deployment
-  namespace: staging
+  namespace: chainspark-staging
   labels:
     app: eth-watcher
 spec:
