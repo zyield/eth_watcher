@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: eth-watcher-deployment
+  namespace: staging
+  labels:
+    app: eth-watcher
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: eth-watcher
+  template:
+    metadata:
+      labels:
+        app: eth-watcher
+    spec:
+      containers:
+        - name: eth-watcher
+          image: 561254188060.dkr.ecr.us-west-2.amazonaws.com/eth_watcher:0.0.7
+          ports:
+            - containerPort: 4001
+          env:
+            - name: SENTRY_DSN
+              valueFrom:
+                secretKeyRef:
+                  name: chainspark-api-secret
+                  key: sentry_dsn_eth_watcher
+            - name: HOST
+              value: "ethwatcher-staging.chainspark.io"
+            - name: PORT
+              value: "4001"
+            - name: API_URL
+              value: "https://api-staging.chainspark.io/api/transactions"
