@@ -1,0 +1,14 @@
+# https://docs.docker.com/compose/compose-file/
+version: '3.7'
+services:
+  eth_watcher:
+    image: "agilealpha/eth_watcher:latest"
+    environment:
+      - API_URL=https://api.chainspark.io/api/transactions
+      - MIX_ENV=prod
+      - PORT=4002
+      - HOST=ethwatcher.chainspark.io
+    env_file:
+      vars.env
+    ports:
+      - 4002:4002

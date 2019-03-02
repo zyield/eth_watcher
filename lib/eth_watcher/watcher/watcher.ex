@@ -5,7 +5,7 @@ defmodule EthWatcher.Watcher do
   alias EthWatcher.Dispatcher
   alias EthWatcher.Util
 
-  @infura "https://mainnet.infura.io/v3/ac1b630668ed483cbe7aef78280f38b3"
+  @infura "https://mainnet.infura.io/v3/<API_KEY>"
   @wei_threshold 100 * :math.pow(10, 18)
   @transfer_signature "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef"
   @split_signature "0x56b138798bd325f6cc79f626c4644aa2fd6703ecb0ab0fb168f883caed75bf32"
